@@ -1,0 +1,73 @@
+from vpython import *
+import random
+
+scene.title = "E91 Quantum Key Distribution Simulation (Entanglement)"
+scene.width = 800
+scene.height = 500
+scene.range = 6
+
+# --- Positions ---
+source_pos = vector(0,0,0)
+alice_pos  = vector(-5,0,0)
+bob_pos    = vector(5,0,0)
+
+# --- Visual objects ---
+source = sphere(pos=source_pos, radius=0.4, color=color.yellow)
+
+alice = box(pos=alice_pos, size=vector(0.5,1,1), color=color.cyan, opacity=0.6)
+bob   = box(pos=bob_pos, size=vector(0.5,1,1), color=color.magenta, opacity=0.6)
+
+label(pos=alice_pos+vector(0,1.2,0), text="Alice", height=14)
+label(pos=bob_pos+vector(0,1.2,0), text="Bob", height=14)
+
+# Display key bits
+alice_text = label(pos=alice_pos+vector(0,-1.5,0), text="", height=14)
+bob_text   = label(pos=bob_pos+vector(0,-1.5,0), text="", height=14)
+
+# E91 uses entangled pairs: results correlated
+def generate_entangled_pair():
+    # True entanglement is complicated, but for animation:
+    # we simulate perfect correlations with 0/1 outcomes
+    bit = random.choice([0, 1])
+    return bit, bit  # Alice, Bob same outcome
+
+# Photon object generator
+def make_photon(start):
+    photon = sphere(pos=start, radius=0.15, color=color.white)
+    return photon
+
+# Animation loop
+while True:
+    rate(0.8)  # speed of sending pairs
+
+    # Create entangled photons
+    photon_A = make_photon(source_pos)
+    photon_B = make_photon(source_pos)
+
+    # Target positions
+    target_A = alice_pos
+    target_B = bob_pos
+
+    # Move photons outward
+    for t in range(100):
+        rate(60)
+        photon_A.pos = source_pos + (target_A - source_pos) * (t/100)
+        photon_B.pos = source_pos + (target_B - source_pos) * (t/100)
+
+    # Measurements (perfectly correlated)
+    bitA, bitB = generate_entangled_pair()
+
+    # Color photons based on bit
+    photon_A.color = color.green if bitA == 1 else color.red
+    photon_B.color = color.green if bitB == 1 else color.red
+
+    # Update text
+    alice_text.text = f"Alice bit: {bitA}"
+    bob_text.text   = f"Bob bit:   {bitB}"
+
+    # Hold results for a moment
+    rate(1)
+
+    # Delete old photons
+    photon_A.visible = False
+    photon_B.visible = False
